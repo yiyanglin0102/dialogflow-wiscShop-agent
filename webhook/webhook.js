@@ -77,6 +77,21 @@ async function getCart() {
   console.log(serverResponse);
   return serverResponse;
 }
+async function getProducts(productName) {
+  let request = {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-access-token': token
+    },
+    redirect: 'follow'
+  }
+
+  const serverReturn = await fetch('https://cs571.cs.wisc.edu/products?category=' + productName, request);
+  const serverResponse = await serverReturn.json();
+  console.log(serverResponse);
+  return serverResponse;
+}
 
 async function getCategory() {
   let request = {
@@ -142,7 +157,6 @@ app.post("/", express.json(), (req, res) => {
   const agent = new WebhookClient({ request: req, response: res });
 
   async function welcome() {
-    await getCart();
     agent.add("Webhook works!");
   }
 
@@ -194,6 +208,20 @@ app.post("/", express.json(), (req, res) => {
 
   }
 
+  async function checkProducts() {
+    productName = agent.parameters.productName;
+    let productList = await getProducts(productName);
+    let productString = "";
+
+    for (let index in productList.products) {
+      let currItem = productList.products[index];
+
+      productString += (currItem.name + ", ");
+    }
+    productString = productString.slice(0, productString.length - 2);
+    agent.add(productString);
+  }
+
   async function checkCategory() {
     await userMessage(agent.query)
     let categoryList = await getCategory();
@@ -232,6 +260,7 @@ app.post("/", express.json(), (req, res) => {
   intentMap.set('GetCategory', checkCategory);
   intentMap.set('GetTags', checkTags);
   intentMap.set('GetCart', checkCart);
+  intentMap.set('GetProducts', checkProducts);
 
   agent.handleRequest(intentMap);
 });

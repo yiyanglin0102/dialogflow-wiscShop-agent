@@ -175,27 +175,33 @@ class App extends React.Component {
       let routes = [];
 
       routes.push (
-        <Route key={'route_user'} exact path={'/' + username} element={<Home username={username} categories={this.state.categories}/>} />
+        <Route key={'route_user'} exact path={'/' + username} 
+        element={<Home username={username} categories={this.state.categories}/>} />
       );
       routes.push (
-        <Route key={'route_user_cart'} path={'/' + username + '/cart'} element={<Cart username={username}/>} />
+        <Route key={'route_user_cart'} path={'/' + username + '/cart'} 
+        element={<Cart username={username}/>} />
       );
       routes.push (
-        <Route key={'route_user_cart_review'} path={'/' + username + '/cart-review'} element={<CartReview username={username}/>} />
+        <Route key={'route_user_cart_review'} path={'/' + username + '/cart-review'} 
+        element={<CartReview username={username}/>} />
       );
       routes.push (
-        <Route key={'route_user_cart_confirmed'} path={'/' + username + '/cart-confirmed'} element={<CartConfirmed username={username}/>} /> 
+        <Route key={'route_user_cart_confirmed'} path={'/' + username + '/cart-confirmed'} 
+        element={<CartConfirmed username={username}/>} /> 
       );
 
       for(const category of this.state.categories) {
         routes.push (
-          <Route key={'route_user_' + category} exact path={'/' + username + '/' + category} element={<Category name={category} username={username}/>} />
+          <Route key={'route_user_' + category} exact path={'/' + username + '/' + category} 
+          element={<Category name={category} username={username}/>} />
         );
       }
 
       for(const product of this.state.products) {
         routes.push (
-          <Route key={'route_user_' + product.id} path={'/' + username + '/' + product.category + '/products/' + product.id} element={<Product product={product} username={username} path={'/products/' + product.id}/>} />
+          <Route key={'route_user_' + product.id} path={'/' + username + '/' + product.category + '/products/' + product.id} 
+          element={<Product product={product} username={username} path={'/products/' + product.id}/>} />
         )
       }
 
@@ -216,7 +222,7 @@ class App extends React.Component {
 
     let response = await fetch(window.$ENDPOINT_URL + '/categories/', requestOptions);
     let result = await response.json();
-
+    // console.log(result);
     this.setState({categories: result.categories})
   }
 
@@ -233,7 +239,7 @@ class App extends React.Component {
 
     let response = await fetch(window.$ENDPOINT_URL + '/products/', requestOptions);
     let result = await response.json();
-
+    // console.log(result);
     this.setState({products: result.products})
   }
 

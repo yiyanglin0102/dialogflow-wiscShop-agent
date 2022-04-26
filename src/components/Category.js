@@ -31,7 +31,7 @@ class Category extends React.Component {
         </Link>
         <div style={styles.pageTitle}>
           <span>
-            <h1>{this.props.name[0].toUpperCase() + this.props.name.substring(1, this.props.name.length)}</h1>
+          <h1 style={{ textTransform: 'capitalize' }}>{this.props.name}</h1>
           </span>
         </div>
         <div style={{display: 'flex', flexDirection: 'row', justifyContent: 'center'}}>

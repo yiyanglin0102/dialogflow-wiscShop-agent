@@ -20,10 +20,10 @@ class Home extends React.Component {
 
   render() {
     return (
-      <div style={{display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center'}}>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
 
         <div style={styles.pageTitle}>
-          <span style={{marginTop:100}}>
+          <span style={{ marginTop: 100 }}>
             <h1>Welcome, {this.props.firstName ? this.props.firstName : this.props.username}</h1>
           </span>
         </div>
@@ -36,12 +36,12 @@ class Home extends React.Component {
     let categories = [];
 
     for (const category of this.props.categories) {
-      categories.push (
+      categories.push(
         <Link to={'/' + this.props.username + '/' + category} key={category} className='basic' style={styles.link}>
           <Card style={styles.cardBody} className="text-center">
-            <Card.Body style={{display: 'flex', flexDirection: 'column', justifyContent: 'center'}}>
+            <Card.Body style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
               <Card.Title>
-                <h2>{category[0].toUpperCase() + category.substring(1, category.length)}</h2>
+                <h2 style={{ textTransform: 'capitalize' }}>{category}</h2>
               </Card.Title>
               {this.getCategoryIcon(category)}
             </Card.Body>

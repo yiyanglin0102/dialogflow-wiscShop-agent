@@ -151,6 +151,24 @@ async function getProducts(productName) {
   return serverResponse;
 }
 
+async function getItemDetails(itemName) {
+  let id = await productNameToID(itemName);
+
+  let request = {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-access-token': token
+    },
+    redirect: 'follow'
+  }
+
+  const serverReturn = await fetch('https://cs571.cs.wisc.edu/products/' + id, request);
+  const serverResponse = await serverReturn.json();
+  console.log(serverResponse);
+  return serverResponse;
+}
+
 async function getCategory() {
   let request = {
     method: 'GET',
@@ -275,9 +293,9 @@ app.post("/", express.json(), (req, res) => {
 
   async function login() {
     // You need to set this from `username` entity that you declare in DialogFlow
-    username = agent.parameters.username
+    username = agent.parameters.username;
     // You need to set this from password entity that you declare in DialogFlow
-    password = agent.parameters.password
+    password = agent.parameters.password;
 
     await getToken();
     await deleteMessage();
@@ -312,8 +330,8 @@ app.post("/", express.json(), (req, res) => {
     let numItem = 0;
     let cartString = "";
     if (typeof cartList === 'undefined') {
-      agent.add("Sorry nothing found in your cart. Please try again!");
-      await agentMessage("Sorry nothing found in your cart. Please try again!");
+      agent.add("Nothing found in your cart. Please try again!");
+      await agentMessage("Nnothing found in your cart. Please try again!");
     } else {
       for (let index in cartList) {
         let currItem = cartList[index];
@@ -365,7 +383,7 @@ app.post("/", express.json(), (req, res) => {
 
   async function checkProducts() {
     await userMessage(agent.query)
-    productName = agent.parameters.productName;
+    let productName = agent.parameters.productName;
     let productList = await getProducts(productName);
     let productString = "";
 
@@ -377,6 +395,14 @@ app.post("/", express.json(), (req, res) => {
     productString = productString.slice(0, productString.length - 2);
     agent.add(productString);
     await agentMessage(productString);
+  }
+
+  async function checkItem() {
+    await userMessage(agent.query)
+    let itemName = agent.parameters.itemName;
+    let itemInfo = await getItemDetails(itemName);
+    agent.add("The description of " + itemInfo.name + " is -[" + itemInfo.description + "]  The price is " + itemInfo.price + " dollars for each.");
+    await agentMessage("The description of " + itemInfo.name + " is [" + itemInfo.description + "]  The price is " + itemInfo.price + " dollars for each.");
   }
 
   async function checkCategory() {
@@ -442,7 +468,6 @@ app.post("/", express.json(), (req, res) => {
 
   let intentMap = new Map();
   intentMap.set("Default Welcome Intent", welcome);
-  // You will need to declare this `Login` intent in DialogFlow to make this work
   intentMap.set("Login", login);
   intentMap.set('GetCategory', checkCategory);
   intentMap.set('GetTags', checkTags);
@@ -450,6 +475,7 @@ app.post("/", express.json(), (req, res) => {
   intentMap.set('ClearCart', clearCart);
   intentMap.set('AddCart', addToCart);
   intentMap.set('GetProducts', checkProducts);
+  intentMap.set('GetItem', checkItem);
   intentMap.set('GoBack', goBack);
   intentMap.set('GoPage', goPage);
 

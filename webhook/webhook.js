@@ -126,7 +126,7 @@ async function productNameToID(name) {
   // console.log(serverResponse.products);
 
   for (let i = 0; i < serverResponse.products.length; i++) {
-    if (serverResponse.products[i].name === name.replaceAll('_', ' ')) {
+    if (serverResponse.products[i].name === name) {
       console.log(serverResponse.products[i].id);
       return serverResponse.products[i].id;
     }
@@ -359,8 +359,8 @@ app.post("/", express.json(), (req, res) => {
     for (let i = 0; i < addNumber; i++) {
       await addProductToCart(id);
     }
-    await agentMessage("added " + addNumber + " " + name.replaceAll('_', ' ') + " to cart.");
-    agent.add("added " + addNumber + " " + name.replaceAll('_', ' ') + " to cart.");
+    await agentMessage("added " + addNumber + " " + name + " to cart.");
+    agent.add("added " + addNumber + " " + name + " to cart.");
   }
 
   async function checkProducts() {

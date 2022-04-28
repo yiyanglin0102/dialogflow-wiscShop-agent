@@ -355,19 +355,22 @@ app.post("/", express.json(), (req, res) => {
   }
 
   async function checkCart() {
+    await userMessage(agent.query);
+
     await getToken();
     if (token === "" || typeof token === 'undefined') {
       await agentMessage("Sorry I cannot do it. Can you log in?");
       return agent.add("Sorry I cannot do it. Can you log in?");
     }
-    let cartList = await getCart()
+    let cartList = await getCart();
+    // console.log(cartList);
     cartList = cartList.products;
     let totalPrice = 0;
     let numItem = 0;
     let cartString = "";
-    if (typeof cartList === 'undefined') {
-      agent.add("Nothing found in your cart. Please try again!");
+    if (cartList.length === 0) {
       await agentMessage("Nnothing found in your cart. Please try again!");
+      return agent.add("Nothing found in your cart. Please try again!");
     } else {
       for (let index in cartList) {
         let currItem = cartList[index];
@@ -377,7 +380,8 @@ app.post("/", express.json(), (req, res) => {
       }
       cartString = cartString.substring(0, cartString.length - 2);
       cartString = "You have added " + numItem + " items to the cart which are " + totalPrice + " dollars. " + "The detail product list are: " + cartString + ".";
-      agent.add(cartString);
+      await agentMessage(cartString);
+      return agent.add(cartString);
     }
 
   }
@@ -410,11 +414,18 @@ app.post("/", express.json(), (req, res) => {
       return agent.add("Sorry I cannot do it. Can you log in?");
     }
 
-    for (let i = 0; i < addNumber; i++) {
+    if (addNumber === "" || typeof addNumber === 'undefined') {
       await addProductToCart(id);
+      await agentMessage("added 1 " + name + " to your cart.");
+      return agent.add("added 1 " + name + " to your cart.")
     }
-    await agentMessage("added " + addNumber + " " + name + " to cart.");
-    agent.add("added " + addNumber + " " + name + " to cart.");
+    else {
+      for (let i = 0; i < addNumber; i++) {
+        await addProductToCart(id);
+      }
+      await agentMessage("added " + addNumber + " " + name + " to your cart.");
+      return agent.add("added " + addNumber + " " + name + " to your cart.");
+    }
   }
 
   async function removeFromCart() {
@@ -477,24 +488,24 @@ app.post("/", express.json(), (req, res) => {
       sum += reviewList[i].stars;
     }
 
-    let average = sum / reviewList.length;
+    let average = (sum / reviewList.length).toFixed(2);
 
     if (reviewList.length === 0) {
-      agent.add("There is no review for " + itemInfo.name + ".");
       await agentMessage("There is no review for " + itemInfo.name + ".");
+      return agent.add("There is no review for " + itemInfo.name + ".");
     }
 
     if (reviewList.length % 2 == 1) { //odd
-      agent.add("There is " + reviewList.length + " review for " +
-        itemInfo.name + ". The average rating is " + average + ".");
       await agentMessage("There is " + reviewList.length + " review for " +
+        itemInfo.name + ". The average rating is " + average + ".");
+      return agent.add("There is " + reviewList.length + " review for " +
         itemInfo.name + ". The average rating is " + average + ".");
     }
 
-    if (reviewList.length % 2 == 0 && !reviewList.length === 0) { //even
-      agent.add("There are " + reviewList.length + " reviews for " +
-        itemInfo.name + ". The average rating is " + average + ".");
+    if (reviewList.length % 2 == 0) { //even
       await agentMessage("There are " + reviewList.length + " reviews for " +
+        itemInfo.name + ". The average rating is " + average + ".");
+      return agent.add("There are " + reviewList.length + " reviews for " +
         itemInfo.name + ". The average rating is " + average + ".");
     }
   }
@@ -626,7 +637,7 @@ app.post("/", express.json(), (req, res) => {
       await agentMessage("You are now viewing the tees product page of WiscShop!")
       agent.add("You are now viewing the tees product page of WiscShop!")
     }
-    
+
   }
 
   let intentMap = new Map();

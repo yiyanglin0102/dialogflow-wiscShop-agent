@@ -169,6 +169,24 @@ async function getItemDetails(itemName) {
   return serverResponse;
 }
 
+async function getItemReviews(itemName) {
+  let id = await productNameToID(itemName);
+
+  let request = {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-access-token': token
+    },
+    redirect: 'follow'
+  }
+
+  const serverReturn = await fetch('https://cs571.cs.wisc.edu/products/' + id + '/reviews', request);
+  const serverResponse = await serverReturn.json();
+  console.log(serverResponse);
+  return serverResponse;
+}
+
 async function getCategory() {
   let request = {
     method: 'GET',
@@ -401,8 +419,43 @@ app.post("/", express.json(), (req, res) => {
     await userMessage(agent.query)
     let itemName = agent.parameters.itemName;
     let itemInfo = await getItemDetails(itemName);
-    agent.add("The description of " + itemInfo.name + " is -[" + itemInfo.description + "]  The price is " + itemInfo.price + " dollars for each.");
+    agent.add("The description of " + itemInfo.name + " is [" + itemInfo.description + "]  The price is " + itemInfo.price + " dollars for each.");
     await agentMessage("The description of " + itemInfo.name + " is [" + itemInfo.description + "]  The price is " + itemInfo.price + " dollars for each.");
+  }
+
+  async function checkAverageRating() {
+    await userMessage(agent.query)
+    let itemName = agent.parameters.itemName;
+    let itemInfo = await getItemDetails(itemName);
+    let itemReviews = await getItemReviews(itemName);
+
+    let reviewList = itemReviews.reviews;
+
+    let sum = 0;
+    for (let i = 0; i < reviewList.length; i++) {
+      sum += reviewList[i].stars;
+    }
+
+    let average = sum / reviewList.length;
+
+    if (reviewList.length === 0) {
+      agent.add("There is no review for " + itemInfo.name + ".");
+      await agentMessage("There is no review for " + itemInfo.name + ".");
+    }
+
+    if (reviewList.length % 2 == 1) { //odd
+      agent.add("There is " + reviewList.length + " review in " +
+        itemInfo.name + ". The average rating is " + average + ".");
+      await agentMessage("There is " + reviewList.length + " review in " +
+        itemInfo.name + ". The average rating is " + average + ".");
+    }
+
+    if (reviewList.length % 2 == 0 && !reviewList.length === 0) { //even
+      agent.add("There are " + reviewList.length + " reviews in " +
+        itemInfo.name + ". The average rating is " + average + ".");
+      await agentMessage("There are " + reviewList.length + " reviews in " +
+        itemInfo.name + ". The average rating is " + average + ".");
+    }
   }
 
   async function checkCategory() {
@@ -476,6 +529,7 @@ app.post("/", express.json(), (req, res) => {
   intentMap.set('AddCart', addToCart);
   intentMap.set('GetProducts', checkProducts);
   intentMap.set('GetItem', checkItem);
+  intentMap.set('GetAverageRating', checkAverageRating);
   intentMap.set('GoBack', goBack);
   intentMap.set('GoPage', goPage);
 

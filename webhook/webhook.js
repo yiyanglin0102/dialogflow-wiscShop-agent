@@ -127,7 +127,7 @@ async function productNameToID(name) {
 
   for (let i = 0; i < serverResponse.products.length; i++) {
     if (serverResponse.products[i].name === name) {
-      console.log(serverResponse.products[i].id);
+      // console.log(serverResponse.products[i].id);
       return serverResponse.products[i].id;
     }
 
@@ -302,6 +302,23 @@ async function addProductToCart(id) {
   return serverResponse;
 }
 
+async function removeProductFromCart(id) {
+  let obj = {}
+  let request = {
+    method: 'DELETE',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-access-token': token
+    },
+    body: JSON.stringify(obj),
+    redirect: 'follow'
+  }
+  const serverReturn = await fetch('https://cs571.cs.wisc.edu/application/products/' + id, request)
+  const serverResponse = await serverReturn.json()
+
+  return serverResponse;
+}
+
 app.get("/", (req, res) => res.send("online"));
 app.post("/", express.json(), (req, res) => {
   const agent = new WebhookClient({ request: req, response: res });
@@ -398,6 +415,29 @@ app.post("/", express.json(), (req, res) => {
     }
     await agentMessage("added " + addNumber + " " + name + " to cart.");
     agent.add("added " + addNumber + " " + name + " to cart.");
+  }
+
+  async function removeFromCart() {
+    let removeNumber = agent.parameters.removeNumber;
+    let name = agent.parameters.Products;
+    console.log(name);
+    let id = await productNameToID(name);
+    await userMessage(agent.query);
+    await getToken();
+    if (token === "" || typeof token === 'undefined') {
+      await agentMessage("Sorry I cannot do it. Can you log in?");
+      return agent.add("Sorry I cannot do it. Can you log in?");
+    }
+    if (removeNumber === "" || typeof removeNumber === 'undefined') {
+      await agentMessage("please provide number of deletion of " + name);
+      return agent.add("please provide number of deletion of " + name);
+    }
+console.log(typeof removeNumber);
+    for (let i = 0; i < removeNumber; i++) {
+      await removeProductFromCart(id);
+    }
+    await agentMessage("removed " + removeNumber + " " + name + " from cart.");
+    agent.add("removed " + removeNumber + " " + name + " from cart.");
   }
 
   async function checkProducts() {
@@ -544,6 +584,7 @@ app.post("/", express.json(), (req, res) => {
   intentMap.set('GetCart', checkCart);
   intentMap.set('ClearCart', clearCart);
   intentMap.set('AddCart', addToCart);
+  intentMap.set('RemoveCart', removeFromCart);
   intentMap.set('GetProducts', checkProducts);
   intentMap.set('GetItem', checkItem);
   intentMap.set('GetAverageRating', checkAverageRating);

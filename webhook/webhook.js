@@ -230,6 +230,7 @@ async function getToken() {
   // console.log(token);
   return token;
 }
+
 async function deleteMessage() {
   let request = {
     method: 'DELETE',
@@ -444,18 +445,34 @@ app.post("/", express.json(), (req, res) => {
     }
 
     if (reviewList.length % 2 == 1) { //odd
-      agent.add("There is " + reviewList.length + " review in " +
+      agent.add("There is " + reviewList.length + " review for " +
         itemInfo.name + ". The average rating is " + average + ".");
-      await agentMessage("There is " + reviewList.length + " review in " +
+      await agentMessage("There is " + reviewList.length + " review for " +
         itemInfo.name + ". The average rating is " + average + ".");
     }
 
     if (reviewList.length % 2 == 0 && !reviewList.length === 0) { //even
-      agent.add("There are " + reviewList.length + " reviews in " +
+      agent.add("There are " + reviewList.length + " reviews for " +
         itemInfo.name + ". The average rating is " + average + ".");
-      await agentMessage("There are " + reviewList.length + " reviews in " +
+      await agentMessage("There are " + reviewList.length + " reviews for " +
         itemInfo.name + ". The average rating is " + average + ".");
     }
+  }
+
+  async function checkReviews() {
+    await userMessage(agent.query)
+    let itemName = agent.parameters.itemName;
+    let itemInfo = await getItemDetails(itemName);
+    let itemReviews = await getItemReviews(itemName);
+
+    let reviewList = itemReviews.reviews;
+    let str = "";
+    for (let i = 0; i < reviewList.length; i++) {
+      str += ("Review Title: " + "[" + reviewList[i].title + "]. ");
+      str += ("Review Content: " + "[" + reviewList[i].text + "]. ");
+    }
+
+    agent.add(str);
   }
 
   async function checkCategory() {
@@ -530,6 +547,7 @@ app.post("/", express.json(), (req, res) => {
   intentMap.set('GetProducts', checkProducts);
   intentMap.set('GetItem', checkItem);
   intentMap.set('GetAverageRating', checkAverageRating);
+  intentMap.set('GetReviews', checkReviews);
   intentMap.set('GoBack', goBack);
   intentMap.set('GoPage', goPage);
 

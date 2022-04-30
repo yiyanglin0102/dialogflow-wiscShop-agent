@@ -114,6 +114,29 @@ async function clearDeleteCart() {
   return serverResponse.message;
 }
 
+async function getAllProduct(name) {
+  let request = {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' },
+    redirect: 'follow'
+  }
+
+  const serverReturn = await fetch('https://cs571.cs.wisc.edu/products', request)
+  const serverResponse = await serverReturn.json()
+  // console.log(serverResponse.products);
+
+
+  for (let i = 0; i < serverResponse.products.length; i++)
+  {
+    if (serverResponse.products[i].name === name)
+    {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 async function productNameToID(name) {
   let request = {
     method: 'GET',
@@ -131,6 +154,24 @@ async function productNameToID(name) {
       return serverResponse.products[i].id;
     }
 
+  }
+  return null;
+}
+
+async function productNameToCategory(name) {
+  let request = {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' },
+    redirect: 'follow'
+  }
+
+  const serverReturn = await fetch('https://cs571.cs.wisc.edu/products', request)
+  const serverResponse = await serverReturn.json()
+
+  for (let i = 0; i < serverResponse.products.length; i++) {
+    if (serverResponse.products[i].name === name) {
+      return serverResponse.products[i].category;
+    }
   }
   return null;
 }
@@ -324,7 +365,7 @@ app.post("/", express.json(), (req, res) => {
   const agent = new WebhookClient({ request: req, response: res });
 
   async function welcome() {
-    agent.add("Webhook works!");
+    agent.add("Hi! Ask me for help!");
   }
 
   async function login() {
@@ -369,8 +410,8 @@ app.post("/", express.json(), (req, res) => {
     let numItem = 0;
     let cartString = "";
     if (cartList.length === 0) {
-      await agentMessage("Nnothing found in your cart. Please try again!");
-      return agent.add("Nothing found in your cart. Please try again!");
+      await agentMessage("Nnothing found in your cart.");
+      return agent.add("Nothing found in your cart.");
     } else {
       for (let index in cartList) {
         let currItem = cartList[index];
@@ -447,8 +488,8 @@ app.post("/", express.json(), (req, res) => {
     for (let i = 0; i < removeNumber; i++) {
       await removeProductFromCart(id);
     }
-    await agentMessage("removed " + removeNumber + " " + name + " from cart.");
-    agent.add("removed " + removeNumber + " " + name + " from cart.");
+    await agentMessage("I have removed " + removeNumber + " " + name + " from cart for you.");
+    agent.add("I have removed " + removeNumber + " " + name + " from cart for you.");
   }
 
   async function checkProducts() {
@@ -462,7 +503,7 @@ app.post("/", express.json(), (req, res) => {
 
       productString += (currItem.name + ", ");
     }
-    productString = productString.slice(0, productString.length - 2);
+    productString = "We offer " + productString.slice(0, productString.length - 2) + ".";
     agent.add(productString);
     await agentMessage(productString);
   }
@@ -530,7 +571,7 @@ app.post("/", express.json(), (req, res) => {
     await userMessage(agent.query);
     let categoryList = await getCategory();
     categoryList = categoryList.categories;
-    let categoryString = "We have the following products: ";
+    let categoryString = "We have the following categories: ";
     categoryString += categoryList.join(', ');
     categoryString += ".";
     agent.add(categoryString);
@@ -576,68 +617,79 @@ app.post("/", express.json(), (req, res) => {
       return agent.add("Sorry I cannot do it. Can you log in?");
     }
     let intendPage = agent.parameters.goPage;
-    await userMessage(agent.query)
-    if (intendPage === "signUp") {
-      await postPage("/signUp")
-      await agentMessage("You are now viewing the sign up page of WiscShop!")
-      agent.add("You are now viewing the sign up page of WiscShop!")
+    await userMessage(agent.query);
+    
+    if (await getAllProduct(intendPage)) {
+      let ID = await productNameToID(intendPage);
+      let categoryName = await productNameToCategory(intendPage);
+      await postPage("/" + username + "/" + categoryName + "/products/" + ID);
+      await agentMessage("You are now viewing the " + intendPage + " product page of WiscShop!");
+      agent.add("You are now viewing the " + intendPage + " product page of WiscShop!");
     }
-    if (intendPage === "signIn") {
-      await postPage("/signIn")
-      await agentMessage("You are now viewing the login page of WiscShop!")
-      agent.add("You are now viewing the login page of WiscShop!")
+    else if (intendPage === "signUp") {
+      await postPage("/signUp");
+      await agentMessage("You are now viewing the sign up page of WiscShop!");
+      agent.add("You are now viewing the sign up page of WiscShop!");
     }
-    if (intendPage === "account") {
+    else if (intendPage === "signIn") {
+      await postPage("/signIn");
+      await agentMessage("You are now viewing the login page of WiscShop!");
+      agent.add("You are now viewing the login page of WiscShop!");
+    }
+    else if (intendPage === "account") {
       await postPage("/" + username);
-      await agentMessage("You are now viewing the home page of WiscShop!")
-      agent.add("You are now viewing the home page of WiscShop!")
+      await agentMessage("You are now viewing the home page of WiscShop!");
+      agent.add("You are now viewing the home page of WiscShop!");
     }
-    if (intendPage === "cart") {
+    else if (intendPage === "cart") {
       await postPage("/" + username + "/cart");
-      await agentMessage("You are now viewing the cart page of WiscShop!")
-      agent.add("You are now viewing the cart page of WiscShop!")
+      await agentMessage("You are now viewing the cart page of WiscShop!");
+      agent.add("You are now viewing the cart page of WiscShop!");
     }
-    if (intendPage === "cart-review") {
+    else if (intendPage === "cart-review") {
       await postPage("/" + username + "/cart-review");
-      await agentMessage("You are now viewing the cart reviewing page of WiscShop!")
-      agent.add("You are now viewing the cart reviewing page of WiscShop!")
+      await agentMessage("You are now viewing the cart reviewing page of WiscShop!");
+      agent.add("You are now viewing the cart reviewing page of WiscShop!");
     }
-    if (intendPage === "cart-confirmed") {
+    else if (intendPage === "cart-confirmed") {
       await postPage("/" + username + "/cart-confirmed");
-      await agentMessage("You are now viewing the cart-confirmed page of WiscShop!")
-      agent.add("You are now viewing the cart-confirmed page of WiscShop!")
+      await agentMessage("You are now viewing the cart-confirmed page of WiscShop!");
+      agent.add("You are now viewing the cart-confirmed page of WiscShop!");
     }
-    if (intendPage === "hats") {
+    else if (intendPage === "hats") {
       await postPage("/" + username + "/hats");
-      await agentMessage("You are now viewing the hat product page of WiscShop!")
-      agent.add("You are now viewing the hat product page of WiscShop!")
+      await agentMessage("You are now viewing the hat product page of WiscShop!");
+      agent.add("You are now viewing the hat product page of WiscShop!");
     }
-    if (intendPage === "leggings") {
+    else if (intendPage === "leggings") {
       await postPage("/" + username + "/leggings");
-      await agentMessage("You are now viewing the leggings product page of WiscShop!")
-      agent.add("You are now viewing the leggings product page of WiscShop!")
+      await agentMessage("You are now viewing the leggings product page of WiscShop!");
+      agent.add("You are now viewing the leggings product page of WiscShop!");
     }
-    if (intendPage === "bottoms") {
+    else if (intendPage === "bottoms") {
       await postPage("/" + username + "/bottoms");
-      await agentMessage("You are now viewing the bottoms product page of WiscShop!")
-      agent.add("You are now viewing the bottoms product page of WiscShop!")
+      await agentMessage("You are now viewing the bottoms product page of WiscShop!");
+      agent.add("You are now viewing the bottoms product page of WiscShop!");
     }
-    if (intendPage === "plushes") {
+    else if (intendPage === "plushes") {
       await postPage("/" + username + "/plushes");
-      await agentMessage("You are now viewing the plushes product page of WiscShop!")
-      agent.add("You are now viewing the plushes product page of WiscShop!")
+      await agentMessage("You are now viewing the plushes product page of WiscShop!");
+      agent.add("You are now viewing the plushes product page of WiscShop!");
     }
-    if (intendPage === "sweatshirts") {
+    else if (intendPage === "sweatshirts") {
       await postPage("/" + username + "/sweatshirts");
-      await agentMessage("You are now viewing the sweatshirts product page of WiscShop!")
-      agent.add("You are now viewing the sweatshirts product page of WiscShop!")
+      await agentMessage("You are now viewing the sweatshirts product page of WiscShop!");
+      agent.add("You are now viewing the sweatshirts product page of WiscShop!");
     }
-    if (intendPage === "tees") {
+    else if (intendPage === "tees") {
       await postPage("/" + username + "/tees");
-      await agentMessage("You are now viewing the tees product page of WiscShop!")
-      agent.add("You are now viewing the tees product page of WiscShop!")
+      await agentMessage("You are now viewing the tees product page of WiscShop!");
+      agent.add("You are now viewing the tees product page of WiscShop!");
     }
-
+    else {
+      await agentMessage("Sorry can you try it again.");
+      agent.add("Sorry can you try it again.");
+    }
   }
 
   let intentMap = new Map();

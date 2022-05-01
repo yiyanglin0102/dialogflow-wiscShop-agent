@@ -126,10 +126,8 @@ async function getAllProduct(name) {
   // console.log(serverResponse.products);
 
 
-  for (let i = 0; i < serverResponse.products.length; i++)
-  {
-    if (serverResponse.products[i].name === name)
-    {
+  for (let i = 0; i < serverResponse.products.length; i++) {
+    if (serverResponse.products[i].name === name) {
       return true;
     }
   }
@@ -400,17 +398,16 @@ app.post("/", express.json(), (req, res) => {
 
     await getToken();
     if (token === "" || typeof token === 'undefined') {
-      await agentMessage("Sorry I cannot do it. Can you log in?");
-      return agent.add("Sorry I cannot do it. Can you log in?");
+      await agentMessage("Sorry. I can only do it after you login.");
+      return agent.add("Sorry. I can only do it after you login.");
     }
     let cartList = await getCart();
-    // console.log(cartList);
     cartList = cartList.products;
     let totalPrice = 0;
     let numItem = 0;
     let cartString = "";
     if (cartList.length === 0) {
-      await agentMessage("Nnothing found in your cart.");
+      await agentMessage("Nothing found in your cart.");
       return agent.add("Nothing found in your cart.");
     } else {
       for (let index in cartList) {
@@ -420,7 +417,7 @@ app.post("/", express.json(), (req, res) => {
         cartString += currItem.count + " " + currItem.name + ", ";
       }
       cartString = cartString.substring(0, cartString.length - 2);
-      cartString = "You have added " + numItem + " items to the cart which are " + totalPrice + " dollars. " + "The detail product list are: " + cartString + ".";
+      cartString = "You have added " + numItem + " items to the cart which are " + totalPrice + " dollars. " + "The detail product list is: " + cartString + ".";
       await agentMessage(cartString);
       return agent.add(cartString);
     }
@@ -431,8 +428,8 @@ app.post("/", express.json(), (req, res) => {
     await userMessage(agent.query);
     await getToken();
     if (token === "" || typeof token === 'undefined') {
-      await agentMessage("Sorry I cannot do it. Can you log in?");
-      return agent.add("Sorry I cannot do it. Can you log in?");
+      await agentMessage("Sorry. I can only do it after you login.");
+      return agent.add("Sorry. I can only do it after you login.");
     }
     let msg = await clearDeleteCart();
     await agentMessage(msg);
@@ -451,21 +448,21 @@ app.post("/", express.json(), (req, res) => {
     await userMessage(agent.query);
     await getToken();
     if (token === "" || typeof token === 'undefined') {
-      await agentMessage("Sorry I cannot do it. Can you log in?");
-      return agent.add("Sorry I cannot do it. Can you log in?");
+      await agentMessage("Sorry. I can only do it after you login.");
+      return agent.add("Sorry. I can only do it after you login.");
     }
 
     if (addNumber === "" || typeof addNumber === 'undefined') {
       await addProductToCart(id);
-      await agentMessage("added 1 " + name + " to your cart.");
-      return agent.add("added 1 " + name + " to your cart.")
+      await agentMessage("I have helped you adding 1 " + name + " to your cart.");
+      return agent.add("I have helped you adding 1 " + name + " to your cart.")
     }
     else {
       for (let i = 0; i < addNumber; i++) {
         await addProductToCart(id);
       }
-      await agentMessage("added " + addNumber + " " + name + " to your cart.");
-      return agent.add("added " + addNumber + " " + name + " to your cart.");
+      await agentMessage("I have helped you adding " + addNumber + " " + name + " to your cart.");
+      return agent.add("I have helped you adding " + addNumber + " " + name + " to your cart.");
     }
   }
 
@@ -477,8 +474,8 @@ app.post("/", express.json(), (req, res) => {
     await userMessage(agent.query);
     await getToken();
     if (token === "" || typeof token === 'undefined') {
-      await agentMessage("Sorry I cannot do it. Can you log in?");
-      return agent.add("Sorry I cannot do it. Can you log in?");
+      await agentMessage("Sorry. I can only do it after you login.");
+      return agent.add("Sorry. I can only do it after you login.");
     }
     if (removeNumber === "" || typeof removeNumber === 'undefined') {
       await agentMessage("please provide number of deletion of " + name);
@@ -503,7 +500,7 @@ app.post("/", express.json(), (req, res) => {
 
       productString += (currItem.name + ", ");
     }
-    productString = "We offer " + productString.slice(0, productString.length - 2) + ".";
+    productString = "In the " + productName + " category of products, we offer " + productString.slice(0, productString.length - 2) + ".";
     agent.add(productString);
     await agentMessage(productString);
   }
@@ -511,14 +508,28 @@ app.post("/", express.json(), (req, res) => {
   async function checkItem() {
     await userMessage(agent.query)
     let itemName = agent.parameters.itemName;
+    if (itemName === "" || typeof itemName === 'undefined') {
+      await agentMessage("Sorry. Please be more specific.");
+      return agent.add("Sorry. Please be more specific.");
+    }
+
+    if (!await getAllProduct(itemName)) {
+      await agentMessage("Sorry. We do not have this item.");
+      return agent.add("Sorry. We do not have this item.");
+    }
+
     let itemInfo = await getItemDetails(itemName);
-    agent.add("The description of " + itemInfo.name + " is [" + itemInfo.description + "]  The price is " + itemInfo.price + " dollars for each.");
     await agentMessage("The description of " + itemInfo.name + " is [" + itemInfo.description + "]  The price is " + itemInfo.price + " dollars for each.");
+    return agent.add("The description of " + itemInfo.name + " is [" + itemInfo.description + "]  The price is " + itemInfo.price + " dollars for each.");
   }
 
   async function checkAverageRating() {
     await userMessage(agent.query)
     let itemName = agent.parameters.itemName;
+    if (itemName === "" || typeof itemName === 'undefined') {
+      agent.add("Sorry. Please be more specific.");
+      await agentMessage("Sorry. Please be more specific.");
+    }
     let itemInfo = await getItemDetails(itemName);
     let itemReviews = await getItemReviews(itemName);
 
@@ -554,17 +565,26 @@ app.post("/", express.json(), (req, res) => {
   async function checkReviews() {
     await userMessage(agent.query)
     let itemName = agent.parameters.itemName;
-    let itemInfo = await getItemDetails(itemName);
+    if (itemName === "" || typeof itemName === 'undefined') {
+      agent.add("Sorry. Please be more specific for the product name.");
+      await agentMessage("Sorry. Please be more specific for the product name.");
+    }
     let itemReviews = await getItemReviews(itemName);
 
     let reviewList = itemReviews.reviews;
-    let str = "";
+    let str = "I found " + reviewList.length + " review(s) for " + itemName + ". ";
     for (let i = 0; i < reviewList.length; i++) {
       str += ("Review Title: " + "[" + reviewList[i].title + "]. ");
       str += ("Review Content: " + "[" + reviewList[i].text + "]. ");
     }
 
-    agent.add(str);
+    if (reviewList.length === 0) {
+      await agentMessage("There is no review for " + itemName + ".");
+      return agent.add("There is no review for " + itemName + ".");
+    }
+
+    await agentMessage(str);
+    return agent.add(str);
   }
 
   async function checkCategory() {
@@ -574,8 +594,9 @@ app.post("/", express.json(), (req, res) => {
     let categoryString = "We have the following categories: ";
     categoryString += categoryList.join(', ');
     categoryString += ".";
-    agent.add(categoryString);
+
     await agentMessage(categoryString);
+    return agent.add(categoryString);
 
   }
 
@@ -601,8 +622,8 @@ app.post("/", express.json(), (req, res) => {
   async function goBack() {
     await getToken();
     if (token === "" || typeof token === 'undefined') {
-      await agentMessage("Sorry I cannot do it. Can you log in?");
-      return agent.add("Sorry I cannot do it. Can you log in?");
+      await agentMessage("Sorry. I can only do it after you login.");
+      return agent.add("Sorry. I can only do it after you login.");
     }
 
     await postBack(true);
@@ -613,12 +634,12 @@ app.post("/", express.json(), (req, res) => {
   async function goPage() {
     await getToken();
     if (token === "" || typeof token === 'undefined') {
-      await agentMessage("Sorry I cannot do it. Can you log in?");
-      return agent.add("Sorry I cannot do it. Can you log in?");
+      await agentMessage("Sorry. I can only do it after you login.");
+      return agent.add("Sorry. I can only do it after you login.");
     }
     let intendPage = agent.parameters.goPage;
     await userMessage(agent.query);
-    
+
     if (await getAllProduct(intendPage)) {
       let ID = await productNameToID(intendPage);
       let categoryName = await productNameToCategory(intendPage);
